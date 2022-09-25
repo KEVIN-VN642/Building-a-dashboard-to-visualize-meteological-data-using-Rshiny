@@ -1,0 +1,75 @@
+---
+title: "Visualization Meteorological Report in UK in 2020"
+author: "Nghia"
+date: "1/20/2021"
+output: html_document
+
+params:
+  measure: "air_temperature"
+  sites: "Dyce"
+  agg_type:  NA
+  time_type:  NA
+  ht_site:  NA
+  m_month:  NA
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,fig.width = 20,fig.height = 10,fig.align = "center")
+library(knitr)
+load("sites_data.RData")
+source("visualize.R")
+source("HT.R")
+```
+
+## Chart
+
+
+The plot represents `r params$agg_type` `r params$measure` of the sites `r params$sites` in 2020
+
+```{r visualize, echo=FALSE, message=FALSE, warning=FALSE}
+
+if (params$agg_type=="Monthly Averages")
+  monthly_plot(params$sites,params$measure)
+if (params$agg_type=="Raw Hourly Data")
+  hourly_plot(params$sites,params$measure)
+if (params$agg_type=="Daily Averages")
+  daily_average(params$sites,params$measure,params$time_type)
+if (params$agg_type=="Daily Maxima")
+  daily_max(params$sites,params$measure,params$time_type)
+if (params$agg_type=="Daily Minima")
+  daily_min(params$sites,params$measure,params$time_type)
+
+
+```
+
+## Summary Data
+
+The table shows the daily average of `r params$measure` in last seven days of each site `r params$sites` in 2020:
+
+```{r Summary Data, echo=FALSE, fig.height=10, fig.width=20, fig.align="center",message=FALSE, warning=FALSE, paged.print=TRUE}
+  data <- selected_site_data(params$sites,params$measure)
+  data <- data %>% group_by(Site_Name,d_date) %>% summarise(mean_measure=round(mean(Measure),1))
+  data<- data %>% group_by(Site_Name) %>% do(tail(.,7))
+  colnames(data) <- c("Site_Name","Date",paste("Mean",params$measure))
+  kable(data)
+
+```
+
+## Hutton Days
+
+The table below shows dates that happen Hutton event at site `r params$ht_site` in `r params$m_month`/2020
+
+```{r Hutton Days, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+  data <- HT_days(params$ht_site,params$m_month)
+  if (nrow(data)==0){
+    "No Hutton days in this month"
+  } else {
+    kable(data)
+  }
+  
+
+```
+
+
+
